@@ -19,7 +19,7 @@ spec:
         - name: ghcr-secret
       containers:
         - name: gateway
-          image: ghcr.io/slickip/quickticket-gateway:923cd323b943be05a998f4f7ed40c73099798705
+          image: ghcr.io/slickip/quickticket-gateway:36df04e3b25e36bd52dc67866240175e4f8cf26b
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
