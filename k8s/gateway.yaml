@@ -13,6 +13,7 @@ spec:
     metadata:
       labels:
         app: gateway
+        version: "v2"
     spec:
       imagePullSecrets:
         - name: ghcr-secret
