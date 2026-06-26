@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     if: "!startsWith(github.event.head_commit.message, 'ci:')"
     permissions:
+      contents: write
       packages: write      # Needed to push to ghcr.io
 
     steps:
