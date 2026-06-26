@@ -8,6 +8,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    if: "!startsWith(github.event.head_commit.message, 'ci:')"
     permissions:
       packages: write      # Needed to push to ghcr.io
 
@@ -20,14 +21,6 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      # YOUR TASK: Add steps to build and push all 3 images
-      # For each service (gateway, events, payments):
-      #   1. docker build -t ghcr.io/<your-username>/quickticket-<service>:${{ github.sha }} ./app/<service>
-      #   2. docker push ghcr.io/<your-username>/quickticket-<service>:${{ github.sha }}
-      #
-      # Hint: ${{ github.sha }} gives the commit SHA — unique, immutable tag
-      # Hint: Replace <your-username> with your GitHub username (lowercase)
 
       - name: Build gateway
         run: |
@@ -43,3 +36,18 @@ jobs:
         run: |
           docker build -t ghcr.io/${{ github.actor }}/quickticket-payments:${{ github.sha }} ./app/payments
           docker push ghcr.io/${{ github.actor }}/quickticket-payments:${{ github.sha }}
+
+      - name: Update image tags in manifests
+        run: |
+          SHA=${{ github.sha }}
+          sed -i "s|image: ghcr.io/.*/quickticket-gateway:.*|image: ghcr.io/${{ github.actor }}/quickticket-gateway:${SHA}|" k8s/gateway.yaml
+          sed -i "s|image: ghcr.io/.*/quickticket-events:.*|image: ghcr.io/${{ github.actor }}/quickticket-events:${SHA}|" k8s/events.yaml
+          sed -i "s|image: ghcr.io/.*/quickticket-payments:.*|image: ghcr.io/${{ github.actor }}/quickticket-payments:${SHA}|" k8s/payments.yaml
+
+      - name: Commit and push manifest update
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add k8s/
+          git diff --cached --quiet || git commit -m "ci: update image tags to ${{ github.sha }}"
+          git push
